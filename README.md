@@ -18,24 +18,25 @@ Built for the **Fractal AI Workshop** with [Matty Reed](https://www.linkedin.com
 
 > *Set me up for the Fractal AI Workshop. The repo is at github.com/Mattyreed1/fractal-ai-workshop-ea-starter. Clone it and walk me through the setup.*
 
-Claude Code will:
+Claude Code will (everything scoped to your EA folder — nothing global touched):
 
-1. Clone the starter repo as `.workshop-starter` inside your EA folder (hidden, out of the way)
-2. Install 3 skills globally into `~/.claude/skills/` (so they work in any project)
+1. Clone the starter repo as `.workshop-starter` inside your EA folder (hidden source)
+2. Install 3 skills into `./.claude/skills/`
 3. Ask you for your **n8n URL + API key** (walks you through where to find them)
 4. Ask you for your **Notion integration token** (walks you through creating one)
-5. Wire both MCP servers in `~/.claude.json`
+5. Wire both MCP servers in `./.mcp.json`
 6. Create three files inside your EA folder:
    - `CLAUDE.md` — instructions Claude reads every session
    - `USER.md` — a starter file about you (fill in placeholders later)
    - `projects/` — folder for deliverables
-7. Tell you to quit + reopen Claude Code
+7. Create `./.claude/settings.json` with project permissions
+8. Tell you to quit + reopen Claude Code
 
-Total: ~15 minutes. No terminal commands.
+Total: ~15 minutes. No terminal commands. Your other Claude Code projects (if any) are untouched.
 
 ### After restart
 
-Open the EA folder again in Claude Code, then paste:
+Open the EA folder again in Claude Code. You'll see a prompt asking whether to trust this project's MCP servers — **click Approve**. Then paste:
 
 > *Check my setup*
 

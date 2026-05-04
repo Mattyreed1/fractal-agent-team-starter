@@ -80,54 +80,52 @@ node --version 2>/dev/null || echo "NOT_INSTALLED"
 
 Do NOT continue until Node.js is available.
 
-Also check if Claude Code config file exists:
+**Important:** Everything this wizard does is **scoped to the EA folder.** We do NOT modify the user's global Claude Code config (`~/.claude.json`, `~/.claude/skills/`, etc.). Skills, settings, and MCP servers all live in the EA folder so it's a self-contained workspace.
 
-```bash
-[ -f ~/.claude.json ] && echo "CONFIG_EXISTS" || echo "CONFIG_MISSING"
-```
-
-If missing, that's fine — Step 4 creates it.
-
-Check if any of the 3 skills are already installed:
+Check if any of the 3 skills are already installed locally:
 
 ```bash
 for s in openclaw-vps-setup n8n notion; do
-  [ -e ~/.claude/skills/$s ] && echo "$s: present" || echo "$s: missing"
+  [ -e ./.claude/skills/$s ] && echo "$s: present" || echo "$s: missing"
 done
 ```
 
-If all 3 are present AND `~/.claude.json` already has both `n8n` and `notion` MCP servers configured, jump to Step 8 (Verify).
+If all 3 are present AND `./.mcp.json` already has both `n8n` and `notion` MCP servers, jump to Step 8 (Verify).
 
 ---
 
-## Step 2: Install the 3 Skills
+## Step 2: Install the 3 Skills (project-local)
 
-Make sure the skills directory exists:
+Skills are installed into `./.claude/skills/` — scoped to the EA folder. Claude Code reads them when this folder is open as a project; they don't affect any other project on the user's machine.
+
+Make the skills directory:
 
 ```bash
-mkdir -p ~/.claude/skills
+mkdir -p ./.claude/skills
 ```
 
-Copy each skill from the cloned repo:
+Copy each skill from the cloned starter:
 
 ```bash
-cp -R ./.workshop-starter/claude-skills/openclaw-vps-setup ~/.claude/skills/
-cp -R ./.workshop-starter/claude-skills/n8n ~/.claude/skills/
-cp -R ./.workshop-starter/claude-skills/notion ~/.claude/skills/
+cp -R ./.workshop-starter/claude-skills/openclaw-vps-setup ./.claude/skills/
+cp -R ./.workshop-starter/claude-skills/n8n ./.claude/skills/
+cp -R ./.workshop-starter/claude-skills/notion ./.claude/skills/
 ```
 
 Verify:
 ```bash
 for s in openclaw-vps-setup n8n notion; do
-  [ -f ~/.claude/skills/$s/SKILL.md ] && echo "$s: ✓" || echo "$s: ✗ MISSING"
+  [ -f ./.claude/skills/$s/SKILL.md ] && echo "$s: ✓" || echo "$s: ✗ MISSING"
 done
 ```
 
 Tell the user:
-> "I installed 3 skills:
+> "I installed 3 skills inside your EA folder (`./.claude/skills/`):
 > - **n8n** — teaches me how to build n8n workflows for you
 > - **notion** — teaches me how to read + write your Notion pages
-> - **openclaw-vps-setup** — teaches me how to set up your own AI agent server (we'll use this in Build #2 of the workshop)"
+> - **openclaw-vps-setup** — teaches me how to set up your own AI agent server (Workshop Build #2)
+>
+> These are scoped to this EA folder. Your other Claude Code projects are untouched."
 
 ---
 
@@ -173,12 +171,12 @@ Tell the user:
 
 Wait for them to paste their API key. **Don't echo it back in plain text** — confirm length only (e.g. "got it, that's a 200-character key").
 
-Now add the MCP server to `~/.claude.json`. Use this approach:
+Now add the MCP server to `./.mcp.json` (the project-local MCP config — Claude Code reads this when the EA folder is open).
 
 ```bash
 python3 - <<'PY'
 import json, os
-path = os.path.expanduser("~/.claude.json")
+path = "./.mcp.json"
 try:
     with open(path) as f:
         cfg = json.load(f)
@@ -199,7 +197,7 @@ cfg["mcpServers"]["n8n"] = {
 }
 with open(path, "w") as f:
     json.dump(cfg, f, indent=2)
-print("n8n MCP server added")
+print("n8n MCP server added to ./.mcp.json")
 PY
 ```
 
@@ -207,13 +205,13 @@ Replace `<N8N_URL>` and `<API_KEY>` with the actual values before running.
 
 Verify:
 ```bash
-python3 -c "import json; d=json.load(open('$HOME/.claude.json')); print('n8n' in d.get('mcpServers', {}))"
+python3 -c "import json; d=json.load(open('./.mcp.json')); print('n8n' in d.get('mcpServers', {}))"
 ```
 
 Should print `True`.
 
 Tell the user:
-> "n8n is wired. Claude Code can now create and edit workflows directly on your account."
+> "n8n is wired (project-scoped to this EA folder). Once you restart Claude Code, I can build and edit workflows on your n8n account."
 
 ---
 
@@ -241,12 +239,12 @@ Wait for the token. Confirm length only, don't echo.
 >
 > Do this for the pages/databases you want me to help with. You can do it now or any time later."
 
-Now add the Notion MCP server:
+Now add the Notion MCP server to the same `./.mcp.json`:
 
 ```bash
 python3 - <<'PY'
-import json, os
-path = os.path.expanduser("~/.claude.json")
+import json
+path = "./.mcp.json"
 with open(path) as f:
     cfg = json.load(f)
 cfg.setdefault("mcpServers", {})
@@ -260,7 +258,7 @@ cfg["mcpServers"]["notion"] = {
 }
 with open(path, "w") as f:
     json.dump(cfg, f, indent=2)
-print("notion MCP server added")
+print("notion MCP server added to ./.mcp.json")
 PY
 ```
 
@@ -268,13 +266,13 @@ Replace `<TOKEN>` with the actual token before running.
 
 Verify:
 ```bash
-python3 -c "import json; d=json.load(open('$HOME/.claude.json')); print('notion' in d.get('mcpServers', {}))"
+python3 -c "import json; d=json.load(open('./.mcp.json')); print('notion' in d.get('mcpServers', {}))"
 ```
 
 Should print `True`.
 
 Tell the user:
-> "Notion is wired. Once you restart Claude Code, I'll be able to read + write to any page you share with the integration."
+> "Notion is wired (project-scoped). Once you restart Claude Code, I can read + write any page you share with the integration."
 
 ---
 
@@ -402,55 +400,61 @@ Tell the user:
 
 ---
 
-## Step 7: Create Settings File
+## Step 7: Create Project Settings File
 
-Check if `~/.claude/settings.json` already exists:
+The settings file is also project-local: `./.claude/settings.json`.
 
+Make sure the directory exists:
 ```bash
-[ -f ~/.claude/settings.json ] && cat ~/.claude/settings.json || echo "MISSING"
+mkdir -p ./.claude
 ```
 
-If it exists and already includes `Read(~/.claude/skills/**)` in the allow array: skip this step.
+Check if `./.claude/settings.json` already exists:
+```bash
+[ -f ./.claude/settings.json ] && cat ./.claude/settings.json || echo "MISSING"
+```
 
-If it exists but doesn't include the skill permissions: add them to the existing allow array. Don't overwrite other permissions.
+If it exists with a permissions block: leave it alone or add missing entries to the allow array.
 
 If it doesn't exist: create it:
-
-```json
+```bash
+cat > ./.claude/settings.json <<'EOF'
 {
   "permissions": {
     "allow": [
-      "Read(~/.claude/skills/**)",
-      "Read(~/.claude/**)"
+      "Read(./.claude/skills/**)",
+      "Read(./CLAUDE.md)",
+      "Read(./USER.md)",
+      "Read(./projects/**)",
+      "Write(./projects/**)"
     ]
   }
 }
+EOF
 ```
 
 Tell the user:
-> "Permissions set up. I can access your skills automatically going forward."
+> "Permissions set up. I can read your skills + workspace files and write deliverables to `projects/` without prompting every time."
 
 ---
 
 ## Step 8: Verify Everything
 
-Run all checks:
+Everything should be inside the EA folder. Run all checks:
 
 ```bash
-echo "--- Global: skills ---"
+echo "--- Skills (project-local) ---"
 for s in openclaw-vps-setup n8n notion; do
-  [ -f ~/.claude/skills/$s/SKILL.md ] && echo "$s: ✓" || echo "$s: ✗ MISSING"
+  [ -f ./.claude/skills/$s/SKILL.md ] && echo "$s: ✓" || echo "$s: ✗ MISSING"
 done
 
-echo "--- Global: files ---"
-[ -f ~/.claude/settings.json ] && echo "settings.json: ✓" || echo "settings.json: ✗ MISSING"
+echo "--- MCP servers (project-local) ---"
+python3 -c "import json; d=json.load(open('./.mcp.json')); s=d.get('mcpServers',{}); print('n8n:', '✓' if 'n8n' in s else '✗'); print('notion:', '✓' if 'notion' in s else '✗')"
 
-echo "--- Global: MCP servers ---"
-python3 -c "import json,os; d=json.load(open(os.path.expanduser('~/.claude.json'))); s=d.get('mcpServers',{}); print('n8n:', '✓' if 'n8n' in s else '✗'); print('notion:', '✓' if 'notion' in s else '✗')"
-
-echo "--- EA workspace files ---"
+echo "--- Workspace files ---"
 [ -f ./CLAUDE.md ] && echo "CLAUDE.md: ✓" || echo "CLAUDE.md: ✗ MISSING"
 [ -f ./USER.md ] && echo "USER.md: ✓" || echo "USER.md: ✗ MISSING"
+[ -f ./.claude/settings.json ] && echo "settings.json: ✓" || echo "settings.json: ✗ MISSING"
 [ -d ./projects ] && echo "projects/: ✓" || echo "projects/: ✗ MISSING"
 [ -d ./.workshop-starter ] && echo ".workshop-starter/: ✓" || echo ".workshop-starter/: ✗ MISSING"
 ```
@@ -463,16 +467,20 @@ Report the results to the user. If anything's missing, offer to fix it.
 
 If everything checks out:
 
-> "**You're all set!** Three things before our session tomorrow:
+> "**You're all set!** Four things before our session tomorrow:
 >
-> **1. Restart Claude Code.** Quit completely (Cmd+Q on Mac, fully close on Windows) and reopen. The MCP connections only activate after a fresh start.
+> **1. Quit Claude Code completely.** Cmd+Q on Mac, or fully close on Windows. Don't just close the window — quit the app.
 >
-> **2. Verify after restart.** Open a new chat and paste:
+> **2. Reopen Claude Code and open this EA folder again.** File → Open Folder → pick your EA folder. The MCP connections only activate after a fresh start with this folder open.
+>
+> **3. You'll see a prompt** asking whether to trust this project's MCP servers. **Click Approve** — that's the n8n + Notion servers we just configured.
+>
+> **4. Verify by pasting:**
 >    > *Check my setup*
 >
 >    I'll confirm everything's wired.
 >
-> **3. Try one quick test.** After verification, ask me:
+> **Quick smoke test after that:**
 >    > *List my n8n workflows.*
 >
 >    or
@@ -520,18 +528,26 @@ Should show `openclaw-vps-setup`, `n8n`, `notion`. If not, the clone failed — 
 
 ## Key Reference
 
-### File Locations
+### File Locations — ALL inside the EA folder
 
-**Global (apply to all Claude Code projects on this machine):**
-- Skills: `~/.claude/skills/{openclaw-vps-setup,n8n,notion}/`
-- Settings: `~/.claude/settings.json`
-- MCP config: `~/.claude.json`
+The wizard does NOT touch any global Claude Code config. Everything lives in the user's EA workspace:
 
-**Project-local (in the user's EA workspace folder):**
-- `CLAUDE.md` — instructions
-- `USER.md` — about the user
-- `projects/` — deliverables
-- `.workshop-starter/` — hidden source repo (where skills were copied from)
+```
+EA/
+├── CLAUDE.md                          ← my instructions
+├── USER.md                            ← about the user
+├── projects/                          ← deliverables
+├── .mcp.json                          ← n8n + notion MCP servers
+├── .claude/
+│   ├── settings.json                  ← permissions
+│   └── skills/
+│       ├── openclaw-vps-setup/
+│       ├── n8n/
+│       └── notion/
+└── .workshop-starter/                 ← hidden source repo (clone of GitHub starter)
+```
+
+**Why project-scoped:** the user's other Claude Code projects (or future ones) are completely unaffected. The EA is self-contained — they can copy, move, or delete the EA folder without leaving any traces in their global config.
 
 ### Signup Links (give to user as needed)
 
