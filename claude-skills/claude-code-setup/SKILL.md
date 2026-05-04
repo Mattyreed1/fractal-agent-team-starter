@@ -24,23 +24,41 @@ Run this setup when the user says any of:
 
 ---
 
-## Step 0: Find or clone the repo
+## Step 0: Confirm the EA workspace + clone the source repo
 
-If the user came to you with a GitHub URL (e.g. `github.com/Mattyreed1/fractal-ai-workshop-ea-starter`) and the repo isn't yet on their machine, clone it first:
+You should be running in the user's EA workspace folder (e.g. `~/EA` or `~/Documents/EA`). Confirm with:
 
 ```bash
-[ -d ~/fractal-ai-workshop-ea-starter ] && echo "EXISTS" || git clone https://github.com/Mattyreed1/fractal-ai-workshop-ea-starter.git ~/fractal-ai-workshop-ea-starter
+pwd
 ```
 
-Then set a variable for the rest of this wizard. The repo lives at `~/fractal-ai-workshop-ea-starter`. All references to `<REPO>` below mean that path.
+**If you're not in a sensibly named EA folder** (e.g. you're at `~`, the Desktop, or some unrelated project), tell the user:
+> "Looks like Claude Code didn't open in a dedicated EA folder. Quick fix:
+>
+> 1. In Finder, create a new folder called `EA` (anywhere — Documents is fine)
+> 2. Quit Claude Code (Cmd+Q)
+> 3. Reopen Claude Code, choose **File → Open Folder**, and pick the EA folder you just created
+> 4. Then paste the setup message again
+>
+> This way your EA has a clean home and we don't pollute your other projects."
 
-If the repo already exists, optionally pull latest:
+Then stop and wait for them to do that.
+
+**Once in the EA folder**, clone the starter repo as a hidden subdirectory (so it's out of the way but available):
+
 ```bash
-cd ~/fractal-ai-workshop-ea-starter && git pull --quiet
+[ -d ./.workshop-starter ] && (cd .workshop-starter && git pull --quiet) || git clone --quiet https://github.com/Mattyreed1/fractal-ai-workshop-ea-starter.git ./.workshop-starter
 ```
+
+Verify the clone worked:
+```bash
+[ -d ./.workshop-starter/claude-skills ] && echo "READY" || echo "CLONE FAILED"
+```
+
+All references to `<REPO>` below mean `./.workshop-starter` (relative to the EA folder).
 
 Tell the user:
-> "I've got the workshop repo cloned. Let me get you set up."
+> "I've got the workshop starter cloned. Let me get you set up."
 
 ---
 
@@ -93,9 +111,9 @@ mkdir -p ~/.claude/skills
 Copy each skill from the cloned repo:
 
 ```bash
-cp -R ~/fractal-ai-workshop-ea-starter/claude-skills/openclaw-vps-setup ~/.claude/skills/
-cp -R ~/fractal-ai-workshop-ea-starter/claude-skills/n8n ~/.claude/skills/
-cp -R ~/fractal-ai-workshop-ea-starter/claude-skills/notion ~/.claude/skills/
+cp -R ./.workshop-starter/claude-skills/openclaw-vps-setup ~/.claude/skills/
+cp -R ./.workshop-starter/claude-skills/n8n ~/.claude/skills/
+cp -R ./.workshop-starter/claude-skills/notion ~/.claude/skills/
 ```
 
 Verify:
@@ -260,33 +278,35 @@ Tell the user:
 
 ---
 
-## Step 6: Create Personalized CLAUDE.md
+## Step 6: Create the EA workspace files
 
-Check if `~/.claude/CLAUDE.md` already exists:
+You'll create three project-local files in the current EA folder. These belong to the user's EA workspace and are theirs to edit any time.
 
+### 6a. `CLAUDE.md` — your EA's instructions
+
+Check if it exists:
 ```bash
-[ -f ~/.claude/CLAUDE.md ] && cat ~/.claude/CLAUDE.md || echo "MISSING"
+[ -f ./CLAUDE.md ] && cat ./CLAUDE.md || echo "MISSING"
 ```
 
-If it exists and already has a "Fractal AI Workshop" section: ask the user if they want to update with new info, or leave it.
-
-If it exists but doesn't have a Workshop section: APPEND the section below — don't overwrite.
-
-If it doesn't exist: create it fresh with `# Claude Code Instructions` as the top heading, then the section below.
-
-Section to add (replace `<NAME>` and `<N8N_URL>` with actual values):
+If it exists and has a "Fractal AI Workshop" section: ask if they want to update it.
+If it doesn't exist OR doesn't have the section: write the file with this content (replace `<NAME>` and `<N8N_URL>`):
 
 ```markdown
-## Fractal AI Workshop EA — <NAME>
+# <NAME>'s Executive Assistant
 
-I'm <NAME>'s Executive Assistant.
+I'm <NAME>'s Executive Assistant. This file is my operating manual.
 
-### Connected Tools
+## Who <NAME> is
 
-- **n8n:** https://<N8N_URL> — I can build, edit, and test workflows
+See `USER.md` in this folder for personal context (background, preferences, current focus).
+
+## Connected Tools
+
+- **n8n:** https://<N8N_URL> — I can build, edit, and test workflows directly
 - **Notion:** read + write any page/database <NAME> shares with the Claude Code integration
 
-### My Skills
+## My Skills
 
 | Skill | When I use it |
 |-------|---------------|
@@ -294,25 +314,91 @@ I'm <NAME>'s Executive Assistant.
 | `notion` | Reading/writing Notion pages and databases |
 | `openclaw-vps-setup` | Setting up <NAME>'s VPS to host AI agents (Workshop Build #2) |
 
-### Preferences (default — edit any time)
+## Defaults
 
-- Show the plan before building
+- Show the plan before building anything non-trivial
 - Validate workflows before declaring done
-- Keep explanations simple
+- Keep explanations simple, plain prose
 - Ask before destructive actions
+- Save deliverables to the `projects/` folder unless told otherwise
+
+## Layout
+
+- `CLAUDE.md` — this file (my instructions)
+- `USER.md` — about <NAME>
+- `projects/` — where deliverables go
+- `.workshop-starter/` — cloned starter repo (source of skills; out of the way)
 ```
 
-Write the file:
+Write it:
+```bash
+cat > ./CLAUDE.md <<'EOF'
+[full content above with <NAME> + <N8N_URL> substituted]
+EOF
+```
+
+### 6b. `USER.md` — about the user
+
+Check if it exists:
+```bash
+[ -f ./USER.md ] && cat ./USER.md || echo "MISSING"
+```
+
+If it doesn't exist, write a starter file (replace `<NAME>`):
+
+```markdown
+# About <NAME>
+
+> This file is loaded into context every Claude Code session. Edit freely.
+
+## Identity
+
+- **Name:** <NAME>
+- **Domain:** [edit: e.g. AEC operator in NZ targeting a COO seat]
+- **What I'm working on:** [edit: current focus or top priority]
+
+## How I work
+
+- [edit: e.g. "Mornings for deep work, afternoons for ops"]
+- [edit: preferred communication style]
+
+## Pet peeves
+
+- [edit: things to avoid — e.g. emoji-laden replies, excessive bullet points, premature conclusions]
+
+## Tools I use day-to-day
+
+- n8n
+- Notion
+- [edit: add others — Slack, Gmail, etc.]
+
+## People in my world (optional)
+
+| Name | Role | When to involve |
+|------|------|-----------------|
+| [edit] | [edit] | [edit] |
+```
+
+Write it:
+```bash
+cat > ./USER.md <<'EOF'
+[full content above with <NAME> substituted]
+EOF
+```
+
+### 6c. `projects/` — where deliverables go
 
 ```bash
-cat > ~/.claude/CLAUDE.md.new <<'EOF'
-[full file content]
-EOF
-mv ~/.claude/CLAUDE.md.new ~/.claude/CLAUDE.md
+mkdir -p ./projects
 ```
 
 Tell the user:
-> "I created your instructions file. Every time you open Claude Code, I'll remember who you are, what you're connected to, and how you like to work."
+> "I created three things in your EA folder:
+> - **`CLAUDE.md`** — my operating manual. Loaded into context every session.
+> - **`USER.md`** — a starter file about you. I left placeholders — fill them in when you have 5 minutes. The more I know about your work, the better I help.
+> - **`projects/`** — where I'll save deliverables (briefs, drafts, reports) unless you tell me otherwise.
+>
+> Open the EA folder in Finder any time to see what I'm doing."
 
 ---
 
@@ -351,17 +437,22 @@ Tell the user:
 Run all checks:
 
 ```bash
-echo "--- Skills ---"
+echo "--- Global: skills ---"
 for s in openclaw-vps-setup n8n notion; do
   [ -f ~/.claude/skills/$s/SKILL.md ] && echo "$s: ✓" || echo "$s: ✗ MISSING"
 done
 
-echo "--- Files ---"
-[ -f ~/.claude/CLAUDE.md ] && echo "CLAUDE.md: ✓" || echo "CLAUDE.md: ✗ MISSING"
+echo "--- Global: files ---"
 [ -f ~/.claude/settings.json ] && echo "settings.json: ✓" || echo "settings.json: ✗ MISSING"
 
-echo "--- MCP servers ---"
+echo "--- Global: MCP servers ---"
 python3 -c "import json,os; d=json.load(open(os.path.expanduser('~/.claude.json'))); s=d.get('mcpServers',{}); print('n8n:', '✓' if 'n8n' in s else '✗'); print('notion:', '✓' if 'notion' in s else '✗')"
+
+echo "--- EA workspace files ---"
+[ -f ./CLAUDE.md ] && echo "CLAUDE.md: ✓" || echo "CLAUDE.md: ✗ MISSING"
+[ -f ./USER.md ] && echo "USER.md: ✓" || echo "USER.md: ✗ MISSING"
+[ -d ./projects ] && echo "projects/: ✓" || echo "projects/: ✗ MISSING"
+[ -d ./.workshop-starter ] && echo ".workshop-starter/: ✓" || echo ".workshop-starter/: ✗ MISSING"
 ```
 
 Report the results to the user. If anything's missing, offer to fix it.
@@ -429,13 +520,18 @@ Should show `openclaw-vps-setup`, `n8n`, `notion`. If not, the clone failed — 
 
 ## Key Reference
 
-### File Locations (the user never touches these directly)
+### File Locations
 
-- Skills: `~/.claude/skills/`
-- Instructions: `~/.claude/CLAUDE.md`
+**Global (apply to all Claude Code projects on this machine):**
+- Skills: `~/.claude/skills/{openclaw-vps-setup,n8n,notion}/`
 - Settings: `~/.claude/settings.json`
 - MCP config: `~/.claude.json`
-- Cloned repo: `~/fractal-ai-workshop-ea-starter`
+
+**Project-local (in the user's EA workspace folder):**
+- `CLAUDE.md` — instructions
+- `USER.md` — about the user
+- `projects/` — deliverables
+- `.workshop-starter/` — hidden source repo (where skills were copied from)
 
 ### Signup Links (give to user as needed)
 
