@@ -25,7 +25,7 @@
 
   "agents": {
     "<AGENT_NAME>": {
-      "_comment": "Replace <AGENT_NAME> with a slug like 'rfi_triager'. Replace channel ID. Add more agents below by duplicating this block.",
+      "_comment": "Replace <AGENT_NAME> with a slug like 'rfi_triager'. Replace channel ID and allowFrom IDs. Add more agents below by duplicating this block, and remember to also update every OTHER agent's allowFrom to include the new bot's ID.",
       "model": {
         "primary": "anthropic/claude-sonnet-4.7"
       },
@@ -36,8 +36,14 @@
       "mcp_servers": [],
       "channels": {
         "discord": {
+          "_comment_security": "groupPolicy=allowlist + allowFrom restricts who can reach this bot. Combined with a private Discord channel (only the user + agent bots have View+Send), this is defense in depth.",
           "bot_token_env": "DISCORD_BOT_TOKEN_AGENT_1",
-          "default_channel_id": "<DISCORD_CHANNEL_ID>"
+          "default_channel_id": "<DISCORD_CHANNEL_ID>",
+          "groupPolicy": "allowlist",
+          "allowFrom": [
+            "discord:<YOUR_DISCORD_USER_ID>",
+            "discord:<EVERY_OTHER_AGENT_BOT_USER_ID>"
+          ]
         }
       }
     }

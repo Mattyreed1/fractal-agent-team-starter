@@ -99,9 +99,27 @@ Schema migration is forward-only. If 4.24 already rewrote your config, restore f
 1. **Is the bot showing as online in Discord?** No → bot token wrong or gateway not running. Check `docker ps`.
 2. **Is the bot in the right channel?** Check channel member list.
 3. **Are channel permissions correct?** Right-click channel → Edit Channel → Permissions → bot must have View Channel + Send Messages.
-4. **Logs:** `docker logs --tail 100 openclaw-openclaw-gateway-1 2>&1 | grep -i discord` — look for `connected` lines for your bot name.
-5. **Channel ID match:** The numeric ID in `openclaw.json` `default_channel_id` must EXACTLY match the channel you're posting in. Easy to mix up if you have multiple channels.
-6. **Heartbeat hasn't fired yet:** With `every: 60m`, the agent might not wake until the next interval. For testing, lower to `every: 2m` temporarily.
+4. **Is YOUR user ID in the bot's `allowFrom`?** This is the most common silent-failure cause once allowlist is enabled. Check `openclaw.json` → the agent's `channels.discord.allowFrom` must include `discord:<your-user-id>`. If you're testing with a different account than the one in the allowlist, the bot will silently ignore you.
+5. **Logs:** `docker logs --tail 100 openclaw-openclaw-gateway-1 2>&1 | grep -i discord` — look for `connected` lines for your bot name, and any `not in allowlist` / `sender rejected` warnings.
+6. **Channel ID match:** The numeric ID in `openclaw.json` `default_channel_id` must EXACTLY match the channel you're posting in. Easy to mix up if you have multiple channels.
+7. **Heartbeat hasn't fired yet:** With `every: 60m`, the agent might not wake until the next interval. For testing, lower to `every: 2m` temporarily.
+
+### Agent online + responds to me, but ignores other agents' handoffs
+
+**Cause:** The OTHER agent bot's user ID isn't in this agent's `allowFrom`. With `groupPolicy: "allowlist"`, OpenClaw silently rejects messages from any sender not on the list — including other agent bots.
+
+**Fix:**
+1. Get the sending agent's bot user ID: in Discord, right-click that bot in the member list → **Copy User ID**.
+2. Edit `~/.openclaw/openclaw.json`: under the RECEIVING agent's `channels.discord.allowFrom`, add `"discord:<sender-bot-id>"`.
+3. Restart the gateway: `docker compose restart openclaw-gateway`.
+
+**Prevention:** Every time you onboard a new agent, update every OTHER agent's `allowFrom` with the new bot's user ID. This is Step 5 of the 7-step onboarding playbook.
+
+### How do I find a Discord user ID?
+
+1. Discord client → **User Settings** (gear icon, bottom left) → **Advanced** → toggle on **Developer Mode**.
+2. Right-click any user (yourself, a teammate, a bot) anywhere their name appears (server member list, channel members, message author) → **Copy User ID**.
+3. It's a long numeric string (e.g. `1234567890123456789`). In `openclaw.json`, prefix with `discord:` — e.g. `"discord:1234567890123456789"`.
 
 ### Bot says "logged in to discord" in logs but doesn't respond
 

@@ -1,5 +1,5 @@
 {
-  "_paste_this_into_openclaw_json_under_agents": "Replace placeholders. Each new agent needs its own bot token + channel. The token name in bot_token_env must also be added to ~/openclaw/.env on the VPS.",
+  "_paste_this_into_openclaw_json_under_agents": "Replace placeholders. Each new agent needs its own bot token + private channel. The token name in bot_token_env must also be added to ~/openclaw/.env on the VPS. allowFrom MUST include the user's Discord ID + every OTHER agent bot's Discord ID (not this bot's own ID). When you add this agent, also append this bot's user ID to every OTHER agent's allowFrom in this file.",
 
   "<AGENT_NAME>": {
     "model": {
@@ -13,7 +13,13 @@
     "channels": {
       "discord": {
         "bot_token_env": "<DISCORD_TOKEN_VAR>",
-        "default_channel_id": "<CHANNEL_ID>"
+        "default_channel_id": "<CHANNEL_ID>",
+        "groupPolicy": "allowlist",
+        "allowFrom": [
+          "discord:<YOUR_USER_ID>",
+          "discord:<OTHER_AGENT_BOT_ID_1>",
+          "discord:<OTHER_AGENT_BOT_ID_2>"
+        ]
       }
     }
   }

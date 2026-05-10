@@ -281,7 +281,13 @@ Push: `scp /tmp/openclaw.json openclaw-vps:~/.openclaw/openclaw.json`
 
 ## Phase 5 — Wire Discord
 
-Goal: agent #1's chat I/O lands in a dedicated Discord channel.
+Goal: agent #1's chat I/O lands in a dedicated, locked-down Discord channel where ONLY the user and the team's other agent bots can talk to it. No random server members.
+
+**Security model: defense in depth.** Two layers enforce who can reach the bot:
+1. **Channel-level (Discord-native):** the agent channel is private; only the user + agent bots have View/Send. Other server members can't see it.
+2. **Bot-level (OpenClaw `allowFrom`):** even if someone is mistakenly added to the channel, the bot's `allowFrom` list whitelists Discord user IDs and silently ignores everyone else.
+
+Set both. Either alone is brittle; together they're solid.
 
 **Step 5.1 — Create the Discord bot** (web UI, ~3 min):
 1. Open https://discord.com/developers/applications → **New Application** → name it `<role>-agent` (e.g. `rfi-triager-agent`).
@@ -295,17 +301,35 @@ Goal: agent #1's chat I/O lands in a dedicated Discord channel.
 3. **Bot Permissions:** check `Send Messages`, `Read Message History`, `View Channels`.
 4. Copy the URL at the bottom, open in browser, select the user's server, click **Authorize**.
 
-**Step 5.3 — Create the dedicated channel.**
+**Step 5.3 — Create the dedicated PRIVATE channel.**
 
 In Discord (the user's server):
-1. Make a new text channel: `#<role>-agent` (e.g. `#rfi-triager-agent`).
-2. Right-click the channel → **Edit Channel** → **Permissions** → grant the bot user `View Channel` + `Send Messages`.
+1. Next to "Text Channels", click `+` → **Create Channel**.
+2. Channel type: **Text**. Name: `<role>-agent` (e.g. `rfi-triager-agent`).
+3. Toggle **Private Channel** ON. Click **Next**.
+4. On the "Add members or roles" screen: leave it **empty** for now (we'll add members in step 5.3.5). Click **Create Channel**.
+5. Right-click the new channel → **Edit Channel** → **Permissions**:
+   - `@everyone` is automatically denied — leave it that way.
+   - Click `+` next to "Members" → search for and add **yourself** (your Discord user). Grant `View Channel`, `Read Message History`, `Send Messages` (green checks).
+   - Click `+` again → add the **agent's bot user** (the one you invited in Step 5.2). Grant the same three permissions.
+   - (If onboarding more than one agent in the same server) Also add each OTHER agent's bot user with the same permissions — agents need read access to each other's channels to do handoffs.
+6. Save.
 
-**Step 5.4 — Get the channel ID.**
+Net result: only you + the agent bots can view or post in this channel. Other members of your Discord server cannot see it.
 
-Discord: User Settings → Advanced → toggle ON **Developer Mode**. Then right-click the channel → **Copy Channel ID** (a long number).
+**Step 5.4 — Capture the IDs you'll need for the allowlist.**
 
-**Step 5.5 — Wire the token + channel into `.env` and `openclaw.json`.**
+Make sure Discord Developer Mode is on: User Settings → Advanced → toggle ON **Developer Mode**. Then collect:
+
+| What | How |
+|---|---|
+| **Channel ID** | Right-click the new agent channel → **Copy Channel ID** (numeric, e.g. `1478105074587668671`) |
+| **Your Discord user ID** | Click your username at the bottom-left of Discord → in the popout, right-click your name → **Copy User ID**. Save it — you'll reuse this for every agent. |
+| **Each agent bot's user ID** | Right-click the bot user in the channel's member list (or in the server member list) → **Copy User ID**. For agent #1 you only need this one bot's ID; for later agents, you'll need each agent's bot ID. |
+
+> Tip: keep a sticky note (or a scratch `.txt`) with your user ID + every agent bot ID. You'll wire the same set of IDs into every agent's `allowFrom`.
+
+**Step 5.5 — Wire the token + channel + allowlist into `.env` and `openclaw.json`.**
 
 ```bash
 ssh openclaw-vps 'echo "DISCORD_BOT_TOKEN_AGENT_1=<paste-token>" >> ~/openclaw/.env && \
@@ -313,9 +337,31 @@ ssh openclaw-vps 'echo "DISCORD_BOT_TOKEN_AGENT_1=<paste-token>" >> ~/openclaw/.
   chmod 600 ~/openclaw/.env'
 ```
 
-In `~/.openclaw/openclaw.json`, the agent's `channels.discord.default_channel_id` should be the numeric ID from Step 5.4.
+In `~/.openclaw/openclaw.json`, the agent's `channels.discord` block must include `default_channel_id`, `groupPolicy: "allowlist"`, and `allowFrom`:
 
-✅ **Phase 5 complete = bot exists, channel exists, token stored, channel ID wired.**
+```json
+"channels": {
+  "discord": {
+    "bot_token_env": "DISCORD_BOT_TOKEN_AGENT_1",
+    "default_channel_id": "<channel-id-from-step-5.4>",
+    "groupPolicy": "allowlist",
+    "allowFrom": [
+      "discord:<your-user-id>",
+      "discord:<every-other-agent-bot-user-id>"
+    ]
+  }
+}
+```
+
+Allowlist rules:
+- Prefix every entry with `discord:` followed by the numeric user ID (e.g. `discord:1234567890123456789`). Plain usernames work too but they're fragile — IDs are stable.
+- Include **your** Discord user ID so you can talk to the bot.
+- Include **every OTHER agent bot's** Discord user ID so teammates can hand off via `@mention`. Don't include this bot's OWN ID — a bot doesn't message itself.
+- `groupPolicy: "allowlist"` tells OpenClaw to ignore any message from a sender NOT in `allowFrom`, even if they're in the channel.
+
+For the first agent (you're solo so far), `allowFrom` is just `["discord:<your-user-id>"]`. You'll grow this list each time you onboard another agent — see the 7-step playbook below.
+
+✅ **Phase 5 complete = bot exists, private channel exists, token stored, channel ID wired, `allowFrom` populated. Only allowlisted IDs can reach this bot.**
 
 ## Phase 6 — Boot + verify
 
@@ -355,11 +401,11 @@ Run this for each new agent (~7 min each once muscle memory). Keep `assets/agent
 |------|--------|------|
 | 1 | **Pick role.** Show user a SOUL.md draft from `assets/` (or copy `SOUL.md.template` and fill in) | 60s |
 | 2 | **Edit SOUL.md + AGENTS.md + HEARTBEAT.md** for the new agent. Push all three plus a fresh `MEMORY.md` (from `assets/workspace/MEMORY.md.template`) to `~/.openclaw/workspace/<slug>/` | 90s |
-| 3 | **Append agent entry** to `~/.openclaw/openclaw.json` from `assets/agent-entry.json` snippet — replace `<AGENT_NAME>`, `<DISCORD_TOKEN_VAR>`, `<CHANNEL_ID>`, `<HEARTBEAT_MIN>` | 90s |
-| 4 | **Add new env vars** to `~/openclaw/.env` (new bot token + channel) and create the Discord channel + invite the bot | 90s |
-| 5 | **Sync skills:** `ssh openclaw-vps 'bash ~/openclaw/sync_skills.sh'` (or use `scripts/onboard_agent.sh`) | 30s |
-| 6 | **Restart gateway:** `ssh openclaw-vps 'cd ~/openclaw && docker compose restart openclaw-gateway'` (~30s) | 30s |
-| 7 | **Trigger from Discord** — `@mention` the new agent in its channel. Verify response. | 60s |
+| 3 | **Create the Discord bot + private channel** for the new agent (Phase 5 Steps 5.1-5.4). Capture the new bot's user ID. | 3 min |
+| 4 | **Append agent entry** to `~/.openclaw/openclaw.json` from `assets/agent-entry.json` snippet — replace `<AGENT_NAME>`, `<DISCORD_TOKEN_VAR>`, `<CHANNEL_ID>`, `<HEARTBEAT_MIN>`, AND set `allowFrom` to `[discord:<your-user-id>, discord:<bot_1_id>, ..., discord:<bot_N_id>]` (your ID + every OTHER existing agent's bot ID — not the new bot's own ID) | 90s |
+| 5 | **Update every other agent's `allowFrom`** in `openclaw.json` to include the new bot's user ID. Without this, existing agents can't accept handoffs from the new one. | 60s |
+| 6 | **Add new env var** to `~/openclaw/.env` (new bot token) and invite each OTHER agent's bot into the new private channel (so they can read it for handoffs) | 60s |
+| 7 | **Restart gateway:** `ssh openclaw-vps 'cd ~/openclaw && docker compose restart openclaw-gateway'` then `@mention` the new agent in its channel. Verify response. | 90s |
 
 The new agent inherits the shared `DNA.md` and `TEAM.md` — no need to recreate those. That's the leverage. It also gets its own private `MEMORY.md` in `workspace/<agent>/` (copied from `assets/workspace/MEMORY.md.template`).
 
@@ -387,6 +433,10 @@ For the long-form runbook with annotations, see `references/onboarding-playbook.
 | Running OpenClaw as `root` inside the container | Permission conflicts; security risk | Default config uses `node` user — leave it alone |
 | `shutdown now` on the VPS | Kills the whole server | `docker compose down` for containers only |
 | Reusing the same Discord bot token across agents | Each agent should have its own identity for visibility | One bot per agent, one channel per agent |
+| Leaving the agent channel public (visible to `@everyone`) | Anyone in the server can talk to the bot — including in shared servers with teammates or accidental invitees | Private channel; only user + agent bots have View + Send permissions |
+| Omitting `allowFrom` (or leaving `groupPolicy` unset) | Bot responds to anyone who can reach the channel, even if channel perms get changed later | Always set `groupPolicy: "allowlist"` + populate `allowFrom` with user ID + every other agent bot ID |
+| Adding usernames (not IDs) to `allowFrom` | Names change with display name updates and break the allowlist silently | Use numeric Discord user IDs prefixed with `discord:` (e.g. `discord:1234567890123456789`) |
+| Forgetting to update other agents' `allowFrom` when onboarding a new agent | New agent can post in chat but other agents silently ignore its handoffs | Step 5 of the 7-step playbook: every existing agent's `allowFrom` must include the new bot's user ID |
 | Adding agents without restarting gateway | Config not reloaded; new agent silent | Always `docker compose restart` after `openclaw.json` edits |
 | Letting agents modify shared `DNA.md` or `TEAM.md` | These are the human's stable team contracts; agent edits cause drift across the whole team | Only the team owner edits these. Each agent appends to its OWN private `MEMORY.md` for its own continuity. |
 | Adding a shared `MEMORY.md` or `KNOWLEDGE.md` | Becomes a noisy junk drawer that drowns each agent in irrelevant context | Cross-agent coordination uses Discord `@mentions`. For structured shared memory, wait for the OB1 extension (see Extension Points). |

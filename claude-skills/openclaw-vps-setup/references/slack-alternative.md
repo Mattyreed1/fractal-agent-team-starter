@@ -125,9 +125,13 @@ Both tokens are now in hand. The manifest already turned Socket Mode on — no a
 
 In Slack (the user's workspace):
 
-1. Create channel `#<role>-agent` (e.g. `#rfi-triager-agent`). Private if you want it hidden from the rest of the workspace.
+1. Create channel `#<role>-agent` (e.g. `#rfi-triager-agent`) as **Private** — click "Create channel" → set visibility to **Private**. This prevents other workspace members from seeing or posting in it.
 2. In that channel: type `/invite @<bot-name>` → enter. **Mandatory** — unlike Discord, Slack bots cannot see messages in a channel they haven't been explicitly invited to, even with workspace-wide install.
-3. Click the channel name at the top → **About** tab → scroll to the bottom → copy the **Channel ID** (starts with `C` for public, `G` for private; ~11 chars).
+3. (Multi-agent) Also `/invite` every OTHER agent bot into this channel so they can read it for handoffs.
+4. Click the channel name at the top → **About** tab → scroll to the bottom → copy the **Channel ID** (starts with `C` for public, `G` for private; ~11 chars).
+5. Capture user IDs for the allowlist:
+   - **Your user ID** — click your profile picture in the top right → **Profile** → click `...` (More) → **Copy member ID** (starts with `U`, e.g. `U0123ABCDEF`).
+   - **Each agent bot's user ID** — click the bot's name in the channel → **View full profile** → click `...` → **Copy member ID** (bot IDs typically start with `U` too, e.g. `U0234BOT45`).
 
 ### Step 5.5 — Wire tokens + channel ID into the VPS (~1 min)
 
@@ -141,7 +145,7 @@ EOF
 chmod 600 ~/openclaw/.env'
 ```
 
-Then edit `~/.openclaw/openclaw.json` — replace the Discord `channels` block with the Slack version. Use the **single-account form** for the first agent (simplest):
+Then edit `~/.openclaw/openclaw.json` — replace the Discord `channels` block with the Slack version. Include `groupPolicy: "allowlist"` + `allowFrom` for the same defense-in-depth pattern as Discord:
 
 ```json
 {
@@ -155,7 +159,12 @@ Then edit `~/.openclaw/openclaw.json` — replace the Discord `channels` block w
         "slack": {
           "botToken": "${SLACK_BOT_TOKEN_AGENT_1}",
           "appToken": "${SLACK_APP_TOKEN_AGENT_1}",
-          "channels": { "default": "C0123456789" }
+          "channels": { "default": "C0123456789" },
+          "groupPolicy": "allowlist",
+          "allowFrom": [
+            "slack:U0123YOUR_USER_ID",
+            "slack:U0234OTHER_BOT_ID"
+          ]
         }
       }
     }
@@ -163,7 +172,7 @@ Then edit `~/.openclaw/openclaw.json` — replace the Discord `channels` block w
 }
 ```
 
-Or the **multi-account form** if you want to use a single OpenClaw instance to talk to multiple Slack workspaces, or to keep tokens namespaced for clarity once you have several agents:
+Or the **multi-account form** (use this when one OpenClaw instance handles multiple Slack workspaces, or for clarity with several agents):
 
 ```json
 {
@@ -174,7 +183,12 @@ Or the **multi-account form** if you want to use a single OpenClaw instance to t
           "enabled": true,
           "botToken": "${SLACK_BOT_TOKEN_AGENT_1}",
           "appToken": "${SLACK_APP_TOKEN_AGENT_1}",
-          "channels": { "default": "C0123456789" }
+          "channels": { "default": "C0123456789" },
+          "groupPolicy": "allowlist",
+          "allowFrom": [
+            "slack:U0123YOUR_USER_ID",
+            "slack:U0234OTHER_BOT_ID"
+          ]
         }
       },
       "defaultAccount": "agent_1"
@@ -183,9 +197,17 @@ Or the **multi-account form** if you want to use a single OpenClaw instance to t
 }
 ```
 
-The Slack plugin merges top-level `channels.slack` settings with per-account overrides (see `~/openclaw/src/slack/accounts.ts` → `mergeSlackAccountConfig`), so either form works. Pick the simpler one for a single agent.
+Allowlist rules (same model as Discord — see `~/openclaw/src/slack/monitor/allow-list.ts`):
+- Prefix every entry with `slack:` followed by the user's member ID (e.g. `slack:U0123ABCDEF`). The plugin also accepts usernames but IDs are stable.
+- Include **your** Slack user ID so you can talk to the bot.
+- Include **every OTHER agent bot's** Slack user ID so teammates can hand off via `@mention`. Don't include this bot's OWN ID.
+- `groupPolicy: "allowlist"` tells OpenClaw to silently drop messages from senders not on `allowFrom`, even if they're in the channel.
 
-✅ **Phase 5-Slack complete = app exists, both tokens stored, channel exists with bot invited, channel ID wired into openclaw.json.**
+For the first agent (solo so far), `allowFrom` is just `["slack:<your-user-id>"]`. Grow the list each time you onboard another agent.
+
+The Slack plugin merges top-level `channels.slack` settings with per-account overrides (see `~/openclaw/src/slack/accounts.ts` → `mergeSlackAccountConfig`), so either form works.
+
+✅ **Phase 5-Slack complete = app exists, both tokens stored, private channel exists with bot(s) invited, channel ID wired, allowFrom populated.**
 
 Proceed to **Phase 6 — Boot + verify** as written in SKILL.md. The only adjustment: in Step 6.3, grep the logs for `slack` instead of `discord`:
 
@@ -251,7 +273,8 @@ Common causes:
 |---------|--------------|
 | `invalid_auth` on bot token | `xoxb-…` token revoked or workspace uninstalled — reinstall the app |
 | `app_token_missing` | `SLACK_APP_TOKEN` not in `.env` or not interpolated into `openclaw.json` |
-| Bot online, silent on `@mention` | Bot not invited to channel — run `/invite @<bot>` in Slack |
+| Bot online, silent on your `@mention` | Either: bot not invited to channel (run `/invite @<bot>`); OR your Slack user ID is missing from the bot's `allowFrom` (check `openclaw.json` → `channels.slack.allowFrom`) |
+| Bot online, ignores other agents' handoffs | Sender bot's user ID not in receiver's `allowFrom` — add `"slack:<sender-bot-id>"` to receiver's allowlist and restart gateway |
 | Bot online, silent on DM | `messages_tab_enabled` was `false` when app was created — edit App Home settings in Slack API console and toggle on |
 | Gateway crashes on boot | `channel.id` malformed (used URL fragment instead of `C…` ID) |
 
