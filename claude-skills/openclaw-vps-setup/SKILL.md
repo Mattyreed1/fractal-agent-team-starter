@@ -61,7 +61,7 @@ Your laptop                Hetzner VPS (€5/mo)            Discord
                                   └─ WORKING.md      (current task state)
 ```
 
-This MVP omits Convex blackboard, custom wake-worker, and other advanced patterns. Add later — see `references/runbook.md` § "What this MVP does NOT include".
+Convex is the recommended standard backend for shared team memory and tasks. Use `fractal-agent-team-memory` when the user wants cross-agent memory/task coordination. Keep the first VPS setup simple; add Convex after the base OpenClaw runtime is reachable unless the user explicitly wants memory during initial setup.
 
 ## The 4-Layer Agent Architecture
 
@@ -79,7 +79,7 @@ The key insight: **DNA is the team's shared SOUL.** It's the identity layer all 
 Plus a **per-agent memory file**:
 - **`MEMORY.md`** — each agent's private append-only log. Lives in that agent's workspace, only that agent reads and writes it.
 
-**Cross-agent coordination happens in Discord, not in shared files.** Agent A finishes a piece of work and `@mentions` Agent B in B's channel; B sees it on next wake. This MVP intentionally has no file-based shared memory layer — that comes later via the OB1 extension (see Extension Points). Until then, the source of truth for cross-agent handoffs is Discord, and each agent's private MEMORY.md is for its own continuity, not the team's.
+**Cross-agent coordination starts in Discord and can graduate to Convex.** Agent A can `@mention` Agent B in B's channel for simple handoffs. For durable shared memory, tasks, and agent status, use [`fractal-agent-team-memory`](https://github.com/Mattyreed1/fractal-agent-team-memory) as the standard Convex backend.
 
 This pattern is the take-home model:
 - **Shared identity stack**: DNA (team SOUL) + TEAM (coordination contract) — same for every agent.

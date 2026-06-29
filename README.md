@@ -1,123 +1,138 @@
-# Fractal AI Workshop EA Starter
+# Fractal Agent Team Starter
 
-Your Claude Code Executive Assistant. Talks to your n8n, your Notion, and your AI agent VPS.
+The simplest public starter for setting up a Fractal-style AI agent team.
 
-Built for the **Fractal AI Workshop** with [Matty Reed](https://www.linkedin.com/in/mattyreed1).
+Open one folder in Claude Code, paste one setup prompt, and build from there. No mystery nested project folders. No global config surprises.
 
----
+## What this helps you set up
 
-## Setup — All in Claude Code, no terminal
+- A clean Claude Code workspace for your agent team
+- Local project instructions (`CLAUDE.md`, `USER.md`, `projects/`)
+- Optional skills from [`fractal-agent-skills`](https://github.com/Mattyreed1/fractal-agent-skills)
+- Optional shared memory/task backend from [`fractal-agent-team-memory`](https://github.com/Mattyreed1/fractal-agent-team-memory)
+- Optional n8n + Notion MCP connections
+- Optional Hetzner VPS setup for hosting agents with OpenClaw
 
-### Before you paste anything
+## Recommended setup
 
-1. **Create a folder called `EA`** somewhere you'll remember (e.g. in your Documents folder). This is your EA's home — it's where deliverables, notes, and configs will live.
-2. **Open Claude Code Desktop.**
-3. **Open that EA folder** in Claude Code: `File → Open Folder` → pick the `EA` folder you just created.
+### 1. Create the folder you want to use
 
-### Now paste this in the chat
+Example: `FractalAgentTeam` in Documents.
 
-> *Set me up for the Fractal AI Workshop. The repo is at github.com/Mattyreed1/fractal-ai-workshop-ea-starter. Clone it and walk me through the setup.*
+This folder is your agent team's home. Claude should configure **this folder itself**, not create another project inside it.
 
-Claude Code will (everything scoped to your EA folder — nothing global touched):
+### 2. Open that folder in Claude Code
 
-1. Clone the starter repo as `.workshop-starter` inside your EA folder (hidden source)
-2. Install 3 skills into `./.claude/skills/`
-3. Ask you for your **n8n URL + API key** (walks you through where to find them)
-4. Ask you for your **Notion integration token** (walks you through creating one)
-5. Wire both MCP servers in `./.mcp.json`
-6. Create three files inside your EA folder:
-   - `CLAUDE.md` — instructions Claude reads every session
-   - `USER.md` — a starter file about you (fill in placeholders later)
-   - `projects/` — folder for deliverables
-7. Create `./.claude/settings.json` with project permissions
-8. Tell you to quit + reopen Claude Code
+Claude Code → `File → Open Folder` → select your `FractalAgentTeam` folder.
 
-Total: ~15 minutes. No terminal commands. Your other Claude Code projects (if any) are untouched.
+### 3. Paste this
 
-### After restart
-
-Open the EA folder again in Claude Code. You'll see a prompt asking whether to trust this project's MCP servers — **click Approve**. Then paste:
-
-> *Check my setup*
-
-Confirms everything is wired and ready.
-
-From then on, **every time you want to work with your EA, open Claude Code and open the EA folder.** That's the entry point.
-
----
-
-## What's inside
-
-| Skill | What it does |
-|-------|--------------|
-| **`n8n`** | Master skill + 8 sub-skills covering nodes, expressions, code, validation, and template publishing. Lets your CC build n8n workflows by talking. |
-| **`notion`** | Read/write Notion pages and databases. Search, query, create, update, append. |
-| **`openclaw-vps-setup`** | Provisions a Hetzner VPS, installs OpenClaw in Docker, sets up the 4-Layer Agent Architecture, deploys agents into Discord channels. The take-home from Workshop Build #2. |
-| **`claude-code-setup`** | The setup wizard above — walks Claude Code through installing the other skills + wiring the MCP servers. |
-
----
-
-## What you'll need
-
-- **Claude Code Desktop** ([download](https://claude.ai/code))
-- **Node.js** ([download](https://nodejs.org)) — required for the MCP servers
-- **n8n account** — Cloud or self-hosted ([free signup](https://n8n.partnerlinks.io/6w47oeg6f6v0))
-- **Notion account** ([signup](https://notion.so/signup))
-
-For the **Workshop Build #2** (post-workshop):
-- A Hetzner Cloud account (the `openclaw-vps-setup` skill walks you through provisioning)
-
----
-
-## How to use it after setup
-
-```
-You: build an n8n workflow that takes incoming RFIs from a webhook and posts a summary to my Notion project DB
-Claude Code: [reads the n8n + notion skills, designs the workflow, builds it via MCP, tests, confirms]
+```text
+Set me up for a Fractal agent team. Use this folder as the project folder. The starter repo is https://github.com/Mattyreed1/fractal-agent-team-starter. Do not create a nested project folder. Walk me through the simplest setup.
 ```
 
+Claude will:
+
+- confirm it is in the right folder,
+- copy the starter files into the current folder if needed,
+- create/update `CLAUDE.md`, `USER.md`, and `projects/`,
+- ask which optional pieces you want:
+  - Fractal agent skills,
+  - Convex team memory,
+  - n8n workflows,
+  - Notion workspace,
+  - Hetzner VPS hosting.
+
+## The golden rule
+
+> The folder you open in Claude Code is the project. Setup must configure that folder. It must not create `EA/`, `.workshop-starter/`, or another nested working directory unless you explicitly ask for it.
+
+## Setup options
+
+### Minimal local agent workspace
+
+Best if you only want a clean Claude Code assistant/project.
+
+Creates:
+
+```text
+CLAUDE.md
+USER.md
+projects/
+.claude/skills/
 ```
-You: set up my VPS and onboard an RFI triage agent
-Claude Code: [reads openclaw-vps-setup skill, walks through provisioning, installs OpenClaw, deploys the agent]
-```
 
-```
-You: save today's meeting notes to my Notion in the project page for Acme
-Claude Code: [searches Notion, finds the page, appends formatted notes]
-```
+### Add Fractal agent skills
 
----
+Uses [`fractal-agent-skills`](https://github.com/Mattyreed1/fractal-agent-skills) for reusable workflows like:
 
-## The 90-day plan
+- deep deliberation,
+- agent collaboration,
+- research,
+- content workflows,
+- skill creation.
 
-After the workshop, see [`docs/90-day-plan.md`](docs/90-day-plan.md):
+### Add team memory
 
-- **Week 1:** One real task automated, your VPS running, one agent online
-- **Month 1:** 2-3 more agents onboarded, shared memory layer in regular use
-- **Quarter 1:** Walk into your next role with a working agent team
+Uses [`fractal-agent-team-memory`](https://github.com/Mattyreed1/fractal-agent-team-memory) as the standard Convex backend for:
 
----
+- shared notes,
+- tasks,
+- agent heartbeat/status,
+- simple cross-agent coordination.
 
-## Already a power user?
+### Add automation tools
+
+Optional MCP wiring for:
+
+- [n8n](https://n8n.io) workflows,
+- [Notion](https://notion.so) pages/databases.
+
+### Add VPS hosting
+
+Uses Hetzner as the standard VPS host and OpenClaw as the agent runtime.
+
+The setup skill walks through:
+
+- SSH key setup,
+- Hetzner CX22 VPS creation,
+- Docker install,
+- OpenClaw install,
+- agent files,
+- Discord routing,
+- basic verification.
+
+## What is inside this repo
+
+| Path | Purpose |
+|---|---|
+| `claude-skills/claude-code-setup` | Main setup wizard |
+| `claude-skills/openclaw-vps-setup` | Hetzner + OpenClaw hosting setup |
+| `claude-skills/n8n` | n8n workflow-building skill |
+| `claude-skills/notion` | Notion read/write skill |
+| `examples/` | Example agent identity files |
+| `docs/` | Extra setup/reference docs |
+
+## Terminal setup alternative
 
 If you prefer terminal:
 
 ```bash
-git clone https://github.com/Mattyreed1/fractal-ai-workshop-ea-starter.git ~/fractal-ai-workshop-ea-starter
-cd ~/fractal-ai-workshop-ea-starter
+git clone https://github.com/Mattyreed1/fractal-agent-team-starter.git FractalAgentTeam
+cd FractalAgentTeam
 bash install.sh
 ```
 
-Then wire the MCP servers manually per `claude-skills/claude-code-setup/SKILL.md` Steps 4-5, and restart Claude Code.
+Then open the same folder in Claude Code and say:
 
-The Claude Code wizard path above handles all of this automatically.
-
----
-
-## License
-
-MIT. Fork it, modify it, sell it.
+```text
+Check my setup.
+```
 
 ## Built by
 
 [Matty Reed](https://www.linkedin.com/in/mattyreed1) / [Fractal AI](https://fractalai.agency)
+
+## License
+
+MIT.

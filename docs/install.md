@@ -1,110 +1,80 @@
 # Install Walkthrough
 
-A more detailed companion to the 3-command install in the README. Pair with the Loom video at `<TODO: link>`.
+This is the detailed version of the README setup.
 
-## Prerequisites
+## Goal
 
-You need:
+Configure the folder you opened in Claude Code. Do not create a nested project folder.
 
-- **macOS or Linux** (Windows users: WSL2 should work, untested)
-- **Claude Code** installed and you've used it at least once
-- **Terminal** access
-- **`git`** installed (`git --version` to check)
+## Beginner path: Claude Code only
 
-You don't need:
+1. Create a folder named `FractalAgentTeam` somewhere easy to find.
+2. Open that folder in Claude Code: `File → Open Folder`.
+3. Paste:
 
-- A VPS yet — the `openclaw-vps-setup` skill walks you through provisioning one
-- A Discord account yet — set it up when the skill prompts you
-- Programming experience — the skill is for non-coders driving CC
-
-## Step-by-step
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/Mattyreed1/fractal-ai-workshop-ea-starter.git ~/fractal-ai-workshop-ea-starter
+```text
+Set me up for a Fractal agent team. Use this folder as the project folder. The starter repo is https://github.com/Mattyreed1/fractal-agent-team-starter. Do not create a nested project folder. Walk me through the simplest setup.
 ```
 
-Lands the repo at `~/fractal-ai-workshop-ea-starter`.
+Claude should configure the current folder directly.
 
-### 2. Run the install script
+## Terminal path
 
 ```bash
-cd ~/fractal-ai-workshop-ea-starter
+git clone https://github.com/Mattyreed1/fractal-agent-team-starter.git FractalAgentTeam
+cd FractalAgentTeam
 bash install.sh
 ```
 
-What happens:
-- Looks at the `claude-skills/` folder
-- For each skill in there, creates a symlink in `~/.claude/skills/<skill-name>`
-- Skips any that are already linked
+Then open `FractalAgentTeam` in Claude Code and say:
 
-You should see something like:
-
-```
-✓  openclaw-vps-setup → linked to /Users/you/.claude/skills/openclaw-vps-setup
+```text
+Check my setup.
 ```
 
-### 3. Restart Claude Code
+## What install.sh does
 
-Quit and reopen. CC discovers skills on startup, so a restart is needed.
+It is project-local:
 
-### 4. Verify
+- copies starter skills into `./.claude/skills/`,
+- creates `projects/`,
+- creates `USER.md` if missing,
+- creates `CLAUDE.md` if missing.
 
-In a fresh CC session, type:
+It does **not** write to global `~/.claude/skills/`.
 
-```
-do I have a skill for setting up an openclaw VPS?
-```
+## Optional add-ons
 
-Expected: CC recommends `openclaw-vps-setup`. If it doesn't, see Troubleshooting below.
+After the minimal setup, Claude asks whether to add:
 
-### 5. (Optional) Drop in the CLAUDE.md template
+- [`fractal-agent-skills`](https://github.com/Mattyreed1/fractal-agent-skills),
+- [`fractal-agent-team-memory`](https://github.com/Mattyreed1/fractal-agent-team-memory) with Convex,
+- n8n MCP,
+- Notion MCP,
+- Hetzner VPS + OpenClaw hosting.
 
-Customize `CLAUDE.md.example` with your name, domain, and preferred behaviors. Save it as:
-
-- `~/.claude/CLAUDE.md` (global — all projects) OR
-- `<your-project>/.claude/CLAUDE.md` (per-project)
-
-## Updating later
-
-When the repo gets new content:
-
-```bash
-cd ~/fractal-ai-workshop-ea-starter
-git pull
-```
-
-Symlinks already point at the repo files, so updates apply automatically. New skills require a re-run of `install.sh`.
-
-## Uninstalling
-
-```bash
-rm ~/.claude/skills/openclaw-vps-setup
-# (and any other skills you linked)
-```
-
-Then optionally remove the cloned repo:
-
-```bash
-rm -rf ~/fractal-ai-workshop-ea-starter
-```
+Say yes only to what you need now. Keep the first setup small.
 
 ## Troubleshooting
 
-### Symlink already exists
+### Claude created a folder inside your folder
 
-The script skipped a skill because there's already something at `~/.claude/skills/<name>`. Either:
+Stop and tell Claude:
 
-- Remove the existing one (`rm ~/.claude/skills/<name>`) and re-run
-- Leave it alone if you intentionally have a custom version
+```text
+Do not use the nested folder. Configure the current folder directly. Move any useful files back to the current folder and delete the nested starter folder after confirming nothing user-created is inside it.
+```
 
-### CC doesn't recognize the skill after restart
+### Claude cannot find the setup skill
 
-1. Confirm the symlink exists: `ls -la ~/.claude/skills/`
-2. Confirm the symlink points somewhere real: `cat ~/.claude/skills/openclaw-vps-setup/SKILL.md` should show the skill content
-3. Fully quit CC (not just close the window) and reopen
+Run from the project folder:
 
-### `git: command not found`
+```bash
+bash install.sh
+```
 
-Install git: `brew install git` (macOS) or `sudo apt install git` (Linux).
+Then restart Claude Code and reopen the same folder.
+
+### Node is missing
+
+Install Node.js from https://nodejs.org, then rerun the optional Convex/n8n/Notion setup.
