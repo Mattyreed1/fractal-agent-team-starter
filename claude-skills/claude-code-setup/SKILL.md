@@ -108,13 +108,15 @@ Tell the user the minimal setup is done.
 
 Ask these as yes/no choices. Keep it simple.
 
-1. Do you want to add Fractal agent skills from `fractal-agent-skills`?
-2. Do you want to set up shared team memory with Convex using `fractal-agent-team-memory`?
-3. Do you want to connect n8n?
-4. Do you want to connect Notion?
-5. Do you want to set up a Hetzner VPS for OpenClaw agent hosting?
+Recommend this default path unless the user has a reason to change it:
 
-Only configure what they say yes to.
+1. Add Fractal agent skills from `fractal-agent-skills`? **Recommended: yes.**
+2. Set up shared team memory with Convex using `fractal-agent-team-memory`? **Recommended: yes.**
+3. Connect n8n? **Recommended: not yet unless they already use n8n.**
+4. Connect Notion? **Recommended: not yet unless they already have a Notion integration ready.**
+5. Set up a Hetzner VPS for OpenClaw agent hosting? **Recommended: after local setup works.**
+
+Only configure what they say yes to. If they are unsure, choose the recommended path: skills + memory now, integrations/VPS later.
 
 ## Optional A — Add Fractal agent skills
 
@@ -166,16 +168,17 @@ rm -rf ./memory-backend/.git "$TMP"
 ```bash
 cd memory-backend
 npm install
-npx convex dev
+npx convex dev --once
 ```
 
-Explain: Convex opens a browser for login and creates the backend. When it shows a deployment URL, save it.
+Explain: Convex opens a browser for login and creates the backend. `--once` configures and pushes once, then exits. When it shows a deployment URL, save it in `CLAUDE.md` under Setup status.
 
 4. Add to `CLAUDE.md`:
 
 ```markdown
 - Team memory backend lives in `memory-backend/`.
 - Convex is the standard backend for shared notes, tasks, and agent status.
+- Convex deployment URL: `<paste URL here>`.
 ```
 
 ## Optional C — Connect n8n
@@ -254,4 +257,4 @@ Tell the user:
 - what was skipped,
 - the next single action.
 
-If nothing else is needed, next action is: restart Claude Code, reopen this same folder, and say `check my setup`.
+If nothing else is needed, next action is: restart Claude Code, reopen this same folder, and say `check my setup`. Keep the next action singular; do not dump a long todo list.

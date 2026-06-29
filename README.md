@@ -36,12 +36,25 @@ Claude will:
 - confirm it is in the right folder,
 - copy the starter files into the current folder if needed,
 - create/update `CLAUDE.md`, `USER.md`, and `projects/`,
-- ask which optional pieces you want:
-  - Fractal agent skills,
-  - Convex team memory,
-  - n8n workflows,
-  - Notion workspace,
-  - Hetzner VPS hosting.
+- recommend the safest default path:
+  - **yes** to Fractal agent skills,
+  - **yes** to Convex team memory,
+  - **not yet** to n8n/Notion unless you already have those accounts ready,
+  - **not yet** to Hetzner/OpenClaw until local setup works.
+
+
+## Best first-run path
+
+For most people, do this in order:
+
+1. **Local workspace** — get Claude Code using the current folder correctly.
+2. **Fractal agent skills** — add reusable operating patterns.
+3. **Convex team memory** — add shared notes/tasks/status.
+4. **One real workflow** — prove value locally.
+5. **Hetzner VPS + OpenClaw** — move to always-on hosting after the local loop works.
+6. **n8n/Notion** — add integrations when you have a real workflow that needs them.
+
+Do not set up everything on day one. That is how agent projects become spicy.
 
 ## The golden rule
 
@@ -90,7 +103,7 @@ Optional MCP wiring for:
 
 ### Add VPS hosting
 
-Uses Hetzner as the standard VPS host and OpenClaw as the agent runtime.
+Use this after local setup and memory work. Hetzner is the standard VPS host and OpenClaw is the agent runtime.
 
 The setup skill walks through:
 
@@ -136,3 +149,12 @@ Check my setup.
 ## License
 
 MIT.
+
+
+## Where users usually trip
+
+- **Wrong folder open:** setup must configure the folder Claude Code has open. If Claude creates a nested folder, stop and correct it.
+- **Too many integrations at once:** start with local + skills + memory. Add n8n, Notion, and VPS only when needed.
+- **Convex looks stuck:** use `npx convex dev --once` for first setup. Plain `npx convex dev` watches forever.
+- **Secrets in chat:** API keys and tokens go into local config files only. Do not paste them into docs or GitHub.
+- **No verification:** every setup step should end with a tiny proof: file exists, command works, URL resolves, or agent can answer from the new context.
