@@ -220,7 +220,7 @@ Update the "Team roster" table at the top — leave the rows blank for now (you'
 
 The default DNA is reasonable for most teams. If the user wants to add team-specific values or rules, edit it now. Keep it tight — under 100 lines.
 
-> **Note:** No shared `MEMORY.md` or `KNOWLEDGE.md` in this MVP. Each agent gets its own private `MEMORY.md` during onboarding (Phase 4). Cross-agent coordination happens via Discord. The OB1 extension (Extension Points) is the planned upgrade path for structured shared memory.
+> **Note:** No shared `MEMORY.md` or `KNOWLEDGE.md` file in the base VPS setup. Each agent gets its own private `MEMORY.md` during onboarding (Phase 4). For durable shared notes/tasks/status, add the Convex backend from `fractal-agent-team-memory`.
 
 ✅ **Phase 3 complete = 2 shared files exist on VPS in `~/.openclaw/shared/`: `DNA.md` + `TEAM.md`.**
 
@@ -250,8 +250,8 @@ scp $SKILL/assets/AGENTS.md.template openclaw-vps:~/.openclaw/workspace/$SLUG/AG
 ```
 Then edit it on the VPS to fill in:
 - `<AGENT_NAME>` → the slug (e.g. `rfi_triager`)
-- `<MCP_SERVERS>` → e.g. `notion`, or `[]` if none
-- `<TIER>` → `LOW`, `MEDIUM`, or `HIGH`
+- `<LIST>` under MCP servers → e.g. `notion`, `n8n`, or `[]` if none
+- `<LOW | MEDIUM | HIGH>` → choose the autonomy tier
 - `<HEARTBEAT_MIN>` → e.g. `60`
 - Channel name (set in Phase 5)
 
@@ -272,7 +272,7 @@ Edit `<AGENT_NAME>` placeholder. Each agent has its own MEMORY.md — never shar
 **Step 4.6 — Render `openclaw.json`** from `assets/openclaw.json`. Edit:
 - Replace `<AGENT_NAME>` with the chosen role slug (e.g. `rfi_triager`)
 - Set the model (default `anthropic/claude-sonnet-4.7`)
-- `heartbeat_minutes` (default 60)
+- `heartbeat.every` (default `60m`)
 - Discord token env var name + channel ID (will be set in Phase 5; placeholder for now)
 
 Push: `scp /tmp/openclaw.json openclaw-vps:~/.openclaw/openclaw.json`

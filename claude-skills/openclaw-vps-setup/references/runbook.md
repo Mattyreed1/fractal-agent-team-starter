@@ -51,7 +51,13 @@ Why OpenClaw?
 
 ---
 
-## Phase 3 — Configure the first agent
+## Phase 3 — Set up shared DNA + TEAM layers
+
+Create the shared `DNA.md` and `TEAM.md` files first. Every agent inherits these before its own SOUL/AGENTS files. This keeps the team coherent.
+
+---
+
+## Phase 4 — Configure the first agent
 
 **What `openclaw.json` does:** Top-level config for OpenClaw. Defines:
 - Gateway settings (port, bind address — keep `loopback` for security)
@@ -61,13 +67,13 @@ Why OpenClaw?
 
 **What `SOUL.md` does:** The agent's identity file. OpenClaw injects this into the agent's system prompt every wake. Think of it as "who are you, what do you do, what are your constraints, what's your tier of autonomy."
 
-**The molty-dna deferral:** SOUL.md has a 12-section structure for proper Fractal-AI agents. Don't reinvent it — invoke the `molty-dna` skill, which encodes the right structure with shared DNA clauses. The starters in `assets/SOUL-*.md` are simplified single-file versions for the AEC use case.
+**SOUL template fallback:** SOUL.md has a 12-section structure for proper Fractal-AI agents. Don't reinvent it — use `assets/SOUL.md.template` and answer the five role questions in that template. The starters in `assets/SOUL-*.md` are simplified examples for the AEC use case.
 
 **What `HEARTBEAT.md` does:** When an agent wakes (per its heartbeat schedule), OpenClaw shows it the heartbeat file as a "what to do this wake" pointer. Keep it slim — under 3KB. Heavy heartbeat files = more tokens per wake = more cost.
 
 ---
 
-## Phase 4 — Wire Discord
+## Phase 5 — Wire Discord
 
 **Why one bot per agent?** Each Discord bot is its own user identity in your server. Different name, different avatar, different last-online status. When 3 agents are working, you see 3 distinct identities in 3 channels — that's the visible-collaboration win. If you reused one bot for all agents, every message would say "MoltyBot" and you couldn't tell who's doing what.
 
@@ -79,7 +85,7 @@ Why OpenClaw?
 
 ---
 
-## Phase 5 — Boot + verify
+## Phase 6 — Boot + verify
 
 **`sync_skills.sh`:** Copies skills from `~/.openclaw/canonical/skills/` to the agent workspace. Idempotent — safe to re-run. On first install with no canonical skills yet, the script logs that and exits cleanly.
 
@@ -102,7 +108,7 @@ Each new agent takes ~7 min once you're warmed up. The point is **muscle memory*
 
 Either:
 - Use a starter from `assets/SOUL-*.md` (RFI / Submittal / Comms)
-- Invoke `molty-dna` for a custom role
+- Use `assets/SOUL.md.template` for a custom role
 
 The role determines everything downstream. Don't pick "general assistant" — that's the agent equivalent of an unfocused intern.
 

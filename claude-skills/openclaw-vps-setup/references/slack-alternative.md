@@ -1,6 +1,6 @@
 # Slack as the Chat Layer — Phase 5 Alternative
 
-This document replaces **Phase 5 (Wire Discord)** and the Discord-specific portions of the 7-step onboarding playbook from `SKILL.md`. Phases 1-4 (provision VPS, install Docker + OpenClaw, configure SOUL/AGENTS/HEARTBEAT, render `openclaw.json`) and Phase 6 (Boot + verify) are unchanged — only the channel wiring differs.
+This document replaces **Phase 5 (Wire Discord)** and the Discord-specific portions of the 7-step onboarding playbook from `SKILL.md`. Phases 1-4 (provision VPS, install Docker + OpenClaw, create shared DNA/TEAM, then configure SOUL/AGENTS/HEARTBEAT and render `openclaw.json`) and Phase 6 (Boot + verify) are unchanged — only the channel wiring differs.
 
 Use this when the user prefers Slack over Discord — typically because their team already lives in Slack and adding a Discord workspace just for agents is friction.
 

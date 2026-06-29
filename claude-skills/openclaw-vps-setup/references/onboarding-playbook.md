@@ -10,7 +10,7 @@ This is the canonical playbook for adding an agent to an OpenClaw deployment tha
 - [ ] You have a Discord server you own (or admin access)
 - [ ] LLM API key already in `~/openclaw/.env` and working
 
-If those aren't true, you're not onboarding — you're provisioning. Go back to Phase 1-5 of SKILL.md.
+If those aren't true, you're not onboarding — you're provisioning. Go back to Phase 1-6 of SKILL.md.
 
 ---
 
@@ -22,7 +22,7 @@ If those aren't true, you're not onboarding — you're provisioning. Go back to 
 
 **How:**
 - If the role matches a starter (RFI / Submittal / Comms), use the file from `assets/SOUL-*.md`.
-- If not, invoke `molty-dna` to assemble a proper SOUL.md.
+- If not, use `assets/SOUL.md.template` and fill in the role, responsibilities, boundaries, voice, and escalation rules.
 - If you can't articulate the role in one sentence, you don't have enough spec — go back to the user and clarify.
 
 **Output:** A SOUL.md draft on your laptop, ready to push to the VPS.
@@ -162,7 +162,7 @@ The first agent takes ~10 min. The third takes ~5. Things that make it faster:
 
 ## When NOT to use this playbook
 
-- **First agent on a fresh VPS** — that's Phase 1-5 of SKILL.md, not the onboarding playbook
+- **First agent on a fresh VPS** — that's Phase 1-6 of SKILL.md, not the onboarding playbook
 - **Removing an agent** — different procedure (delete agent block, restart, archive workspace files)
 - **Updating an existing agent's SOUL.md** — just edit the file, then `docker compose restart` (no openclaw.json change needed)
 - **Adding skills to an existing agent** — drop skill in `~/.openclaw/canonical/skills/`, run `sync_skills.sh`, restart

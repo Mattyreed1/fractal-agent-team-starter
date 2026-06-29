@@ -185,42 +185,56 @@ Explain: Convex opens a browser for login and creates the backend. `--once` conf
 
 Ask for n8n URL and API key. Do not echo secrets. Store project-local in `./.mcp.json`.
 
-Use:
+Use this safe merge script. Replace `<N8N_URL>` and `<API_KEY>` before running. Preserve every existing key and only add/update `mcpServers.n8n`:
 
-```json
-{
-  "mcpServers": {
-    "n8n": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "n8n-mcp"],
-      "env": {
-        "MCP_MODE": "stdio",
-        "LOG_LEVEL": "error",
-        "DISABLE_CONSOLE_OUTPUT": "true",
-        "N8N_API_URL": "https://<N8N_URL>",
-        "N8N_API_KEY": "<API_KEY>"
-      }
-    }
+```bash
+python3 - <<'PY'
+import json
+from pathlib import Path
+path = Path('.mcp.json')
+cfg = json.loads(path.read_text()) if path.exists() else {}
+cfg.setdefault('mcpServers', {})
+cfg['mcpServers']['n8n'] = {
+  'type': 'stdio',
+  'command': 'npx',
+  'args': ['-y', 'n8n-mcp'],
+  'env': {
+    'MCP_MODE': 'stdio',
+    'LOG_LEVEL': 'error',
+    'DISABLE_CONSOLE_OUTPUT': 'true',
+    'N8N_API_URL': 'https://<N8N_URL>',
+    'N8N_API_KEY': '<API_KEY>'
   }
 }
+path.write_text(json.dumps(cfg, indent=2) + '\n')
+print('n8n MCP server added')
+PY
+python3 -m json.tool .mcp.json >/dev/null && echo MCP_JSON_OK
 ```
-
-Merge with existing `.mcp.json`; do not overwrite other servers.
 
 ## Optional D — Connect Notion
 
-Ask for a Notion internal integration token. Do not echo secrets. Add project-local `notion` MCP server to `./.mcp.json`:
+Ask for a Notion internal integration token. Do not echo secrets. Use this safe merge script. Replace `<TOKEN>` before running. Preserve every existing key and only add/update `mcpServers.notion`:
 
-```json
-{
-  "type": "stdio",
-  "command": "npx",
-  "args": ["-y", "@notionhq/notion-mcp-server"],
-  "env": {
-    "OPENAPI_MCP_HEADERS": "{\"Authorization\":\"Bearer <TOKEN>\",\"Notion-Version\":\"2022-06-28\"}"
+```bash
+python3 - <<'PY'
+import json
+from pathlib import Path
+path = Path('.mcp.json')
+cfg = json.loads(path.read_text()) if path.exists() else {}
+cfg.setdefault('mcpServers', {})
+cfg['mcpServers']['notion'] = {
+  'type': 'stdio',
+  'command': 'npx',
+  'args': ['-y', '@notionhq/notion-mcp-server'],
+  'env': {
+    'OPENAPI_MCP_HEADERS': '{"Authorization":"Bearer <TOKEN>","Notion-Version":"2022-06-28"}'
   }
 }
+path.write_text(json.dumps(cfg, indent=2) + '\n')
+print('Notion MCP server added')
+PY
+python3 -m json.tool .mcp.json >/dev/null && echo MCP_JSON_OK
 ```
 
 Remind the user they must share Notion pages/databases with the integration.
